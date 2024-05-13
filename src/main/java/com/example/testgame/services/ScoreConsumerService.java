@@ -139,7 +139,7 @@ public class ScoreConsumerService implements IScoreConsumer {
         logger.info("Cache is being updated by thread " + Thread.currentThread().getId() + " name " + Thread.currentThread().getName());
         try {
             if (cache.isEmpty()) {
-                List<PlayerScore> getTop5FromDB = retrieveTop5ScoresFromDatabase();
+                List<PlayerScore> getTop5FromDB = retrieveTopKScoresFromDatabase();
                 logger.info("updated from db");
                 cache.addAll(getTop5FromDB);
             } else {
@@ -243,10 +243,10 @@ public class ScoreConsumerService implements IScoreConsumer {
      *
      * @return A list of PlayerScore objects representing the top 5 scores.
      */
-    public List<PlayerScore> retrieveTop5ScoresFromDatabase() {
+    public List<PlayerScore> retrieveTopKScoresFromDatabase() {
 
         logger.info("********* Fetching Top5 scores from Database. ***********");
-        return playerScoreRepository.findTop5ByOrderByScoreDesc();
+        return playerScoreRepository.findTopkByOrderByScoreDesc(Constant.TOP_PLAYERS);
     }
 
     /**
