@@ -1,19 +1,18 @@
-package com.example.testgame.services.automaticfiles;
+package com.example.testgame.services;
 
 import com.example.testgame.constants.Constant;
+import com.example.testgame.exceptions.PublishingFileScoreException;
+import com.example.testgame.helper.DateFormatterHelper;
 import com.example.testgame.models.Player;
 import com.example.testgame.repositories.PlayerRepository;
 import com.example.testgame.repositories.PlayerScoreRepository;
-import com.example.testgame.services.IScorePublisher;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -24,8 +23,6 @@ import java.util.logging.Logger;
 public class ScorePublisherService implements IScorePublisher {
 
     private static final Logger logger = Logger.getLogger(ScorePublisherService.class.getName());
-
-//    private final String directoryPath = "src\\main\\resources\\files\\";
     @Autowired
     private PlayerRepository playerRepository;
 
@@ -40,22 +37,21 @@ public class ScorePublisherService implements IScorePublisher {
     private ExecutorService executorService;
 
 
-
     public ScorePublisherService(){
 
         this.currentFileName = Constant.FILE_NAME;
         this.currentFileSize = 0;
-        this.fileCounter=2;
+        fileCounter=2;
     }
 
     @PostConstruct
     public void init() {
         this.executorService = Executors.newFixedThreadPool(3); // Maximum of 3 threads
         startPublishingScores();
-//        publishPlayerScores();
     }
 
     public void startPublishingScores() {
+
         for (int i = 0; i < 3; i++) {
             executorService.execute(new ScorePublishTask());
         }
@@ -93,36 +89,9 @@ public class ScorePublisherService implements IScorePublisher {
         return (int) (Math.random() * 101);
     }
 
-//    public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) {
-//        try (FileWriter writer = new FileWriter(currentFileName, true)) {
-//            writer.write(playerId+ "," +playerName + "," + playerScore + ","+ LocalDateTime.now() +"\n");
-//            currentFileSize++;
-//
-//            if (currentFileSize >= Constant.DEFAULT_FILE_SIZE) {
-//                writer.close();
-//                createNewFile();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-    public String formatDate(){
-        // Get the current date and time
-        LocalDateTime now = LocalDateTime.now();
-
-        // Extract the date part from LocalDateTime
-        LocalDate date = now.toLocalDate();
-
-        // Define a custom date format
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        // Format the LocalDate object as a string
-        return date.format(formatter);
-
-    }
-
-    public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) {
+    public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) throws PublishingFileScoreException {
         synchronized (this) {
+            logger.info("Publishing score by thread " + Thread.currentThread() + "id " + Thread.currentThread().getId() + " name "+ Thread.currentThread().getName());
             try (FileWriter writer = new FileWriter(currentFileName, true)) {
                 writer.write(playerId + "," + playerName + "," + playerScore + "," + LocalDateTime.now() + "\n");
                 currentFileSize++;
@@ -132,7 +101,7 @@ public class ScorePublisherService implements IScorePublisher {
                     createNewFile();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new PublishingFileScoreException("Error is thrown while publishing score to File",e);
             }
         }
     }
@@ -140,7 +109,8 @@ public class ScorePublisherService implements IScorePublisher {
 
     private void createNewFile() {
         // Generate a new file name, you can use a random UUID or any other naming scheme
-        String currentDate = formatDate();
+        DateFormatterHelper dateFormatterHelper = new DateFormatterHelper();
+        String currentDate = dateFormatterHelper.formatDate();
         String newFileName = Constant.DIRECTORY_PATH + "file_" + currentDate + "_"+fileCounter+".txt";
         currentFileName = newFileName;
         fileCounter++;
@@ -153,46 +123,21 @@ public class ScorePublisherService implements IScorePublisher {
         public void run() {
             while (true) {
                 try {
-                    List<Player> players = playerRepository.findAll();
-                    for (Player player : players) {
-                        Integer playerId = player.getPlayerId();
-                        String playerName = player.getPlayerName();
-                        int score = generateRandomScore();
-                        addEntryToFile(playerId, playerName, score);
-                    }
-                    // Sleep for 15 seconds
-                    Thread.sleep(15000);
-                } catch (Exception e) {
-                    logger.severe("Error in publishing scores: " + e.getMessage());
+                    Player player = generateRandomPlayerName();
+                    Integer playerId = player.getPlayerId();
+                    String playerName = player.getPlayerName();
+                    int score = generateRandomScore();
+                    addEntryToFile(playerId, playerName, score);
+                    // Sleep for 5 seconds
+                    Thread.sleep(5000);
+                } catch (PublishingFileScoreException e) {
+                    logger.severe(e.getMessage());
+                }
+                catch (Exception e)
+                {
+                    logger.severe("Error in generating player name or scores: " + e.getMessage());
                 }
             }
         }
     }
-    /**
-     *  it's a scheduled task that runs every 15 seconds
-     * Generates random player scores and writes them to a file.
-     * This method is invoked periodically by a scheduled task.
-     */
-
-//    @Scheduled(fixedRate = 15000) // Run every 1 second
-//    public void publishPlayerScores() {
-//        long startTime = System.currentTimeMillis();
-//        Player player = generateRandomPlayerName();
-//        assert player != null;
-//        Integer playerId= player.getPlayerId();
-//        String playerName = player.getPlayerName();
-//        int score = generateRandomScore();
-//        addEntryToFile(playerId,playerName,score);
-//        try (FileWriter writer = new FileWriter(Constant.FILE_NAME, true)) {
-//
-//            writer.write(playerId+ "," +playerName + "," + score + ","+ LocalDateTime.now() +"\n");
-//            logger.info("********Published to topic(file) successfully *********");
-//            long endTime = System.currentTimeMillis();
-//            long executionTime = endTime - startTime;
-//            logger.info("Task execution time: " + executionTime + " milliseconds");
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

@@ -1,7 +1,7 @@
 package com.example.testgame.controllers;
 
 import com.example.testgame.models.PlayerScore;
-import com.example.testgame.services.automaticfiles.ScoreConsumerService;
+import com.example.testgame.services.ScoreConsumerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
