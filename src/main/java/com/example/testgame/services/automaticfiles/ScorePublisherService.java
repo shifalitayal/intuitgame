@@ -5,10 +5,11 @@ import com.example.testgame.models.Player;
 import com.example.testgame.repositories.PlayerRepository;
 import com.example.testgame.repositories.PlayerScoreRepository;
 import com.example.testgame.services.IScorePublisher;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
+//
+//import javax.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;

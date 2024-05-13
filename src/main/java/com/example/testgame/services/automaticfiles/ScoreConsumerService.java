@@ -5,7 +5,7 @@ import com.example.testgame.helper.ScoreComparator;
 import com.example.testgame.models.Player;
 import com.example.testgame.models.PlayerScore;
 import com.example.testgame.repositories.PlayerScoreRepository;
-import com.example.testgame.services.IRedisService;
+//import com.example.testgame.services.IRedisService;
 import com.example.testgame.services.IScoreConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,9 +43,9 @@ public class ScoreConsumerService implements IScoreConsumer {
 
     @Autowired
     private PlayerScoreRepository playerScoreRepository;
-
-    @Autowired
-    private IRedisService redisService;
+//
+//    @Autowired
+//    private IRedisService redisService;
 
     public ScoreConsumerService()
     {
