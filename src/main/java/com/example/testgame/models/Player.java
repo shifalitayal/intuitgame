@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
+import lombok.NonNull;
+
 @Entity
 @Table(name = "player")
 @Data
@@ -13,11 +15,11 @@ public class Player {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonIgnore
     @Column(name = "player_id")
     private Integer playerId;
 
     @Column
+    @NonNull
     private String playerName;
 
 
