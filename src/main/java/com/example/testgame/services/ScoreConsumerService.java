@@ -10,15 +10,13 @@ import com.example.testgame.helper.ScoreComparator;
 import com.example.testgame.models.Player;
 import com.example.testgame.models.PlayerScore;
 import com.example.testgame.repositories.PlayerScoreRepository;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -36,12 +34,14 @@ public class ScoreConsumerService implements IScoreConsumer {
 
     static final Logger logger = Logger.getLogger(ScoreConsumerService.class.getName());
 
+    @Getter
     PriorityBlockingQueue<PlayerScore> cache ;
 
     ExecutorService executorService ;
 
 
-    private final Map<String, Integer> lastProcessedLineMap ;
+
+    Map<String, Integer> lastProcessedLineMap ;
 
     @Autowired
     private PlayerScoreRepository playerScoreRepository;
@@ -83,7 +83,8 @@ public class ScoreConsumerService implements IScoreConsumer {
                 }
             }
 
-        } catch (ProcessingFileScoreException | FileCountLineException e) {
+        }
+        catch (ProcessingFileScoreException | FileCountLineException e) {
             logger.severe(e.getMessage());
         } catch (Exception e) {
             logger.severe("Exception occurred in processScoresFromFile method "+e.getMessage());
@@ -122,8 +123,8 @@ public class ScoreConsumerService implements IScoreConsumer {
                 }
             }
             lastProcessedLineMap.put(file.getName(), endLine);
-        } catch (IOException e) {
-            throw new ProcessingFileScoreException("Error occurred while Processing File score",e);
+        } catch (NullPointerException | IOException e){
+            throw new ProcessingFileScoreException("Error occurred while Processing Null File score",e);
         }
 
     }
@@ -157,12 +158,10 @@ public class ScoreConsumerService implements IScoreConsumer {
                 }
 
             }
-        } catch (DataAccessException e) {
-            throw new UpdatingCacheException("Error occurred while updating cache",e);
-        }catch (NullPointerException e){
+        } catch (NullPointerException e){
             throw new NullPointerException("Null pointer exception occurred while updating cache");
         } catch (Exception e) {
-            logger.severe(e.getMessage());
+            throw new UpdatingCacheException("Error occurred while updating cache",e);
         }
     }
 
@@ -190,12 +189,14 @@ public class ScoreConsumerService implements IScoreConsumer {
             playerScoreRepository.save(playerScore);
             logger.info("************* Successfully updated Player score in database ********");
         }
-        catch (DataAccessException e)
+        catch (Exception e)
         {
             throw new UpdatingDBException("Error occurred while Updating to database or cache " ,e);
         }
 
     }
+
+
 
     /**
      * Counts the total number of lines in the file specified by the given file path.
@@ -249,6 +250,7 @@ public class ScoreConsumerService implements IScoreConsumer {
         return playerScoreRepository.findTopkByOrderByScoreDesc(Constant.TOP_PLAYERS);
     }
 
+
     /**
      * Executes multiple tasks concurrently, updating the database and cache.
      * This method creates a new player and player score based on the provided parameters,
@@ -273,17 +275,16 @@ public class ScoreConsumerService implements IScoreConsumer {
             try {
                 updateDatabase(playerId, playerName, score, timestamp);
             } catch (UpdatingDBException e) {
-                throw new RuntimeException(e);
+                logger.severe(e.getMessage());
             }
         });
         executorService.submit(() -> {
             try {
                 updateTopScoresInCache(playerScore);
             } catch (UpdatingCacheException e) {
-                throw new RuntimeException(e);
+                logger.severe(e.getMessage());
             }
         });
-
-
     }
+
 }

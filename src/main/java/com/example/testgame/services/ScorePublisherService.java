@@ -1,6 +1,7 @@
 package com.example.testgame.services;
 
 import com.example.testgame.constants.Constant;
+import com.example.testgame.exceptions.NegativeScoreException;
 import com.example.testgame.exceptions.PublishingFileScoreException;
 import com.example.testgame.helper.DateFormatterHelper;
 import com.example.testgame.models.Player;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileWriter;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -29,10 +29,10 @@ public class ScorePublisherService implements IScorePublisher {
     @Autowired
     private PlayerScoreRepository playerScoreRepository;
 
-    private String currentFileName;
-    private volatile int currentFileSize;
+    String currentFileName;
+    volatile int currentFileSize;
 
-    private static int fileCounter;
+    static int fileCounter;
 
     private ExecutorService executorService;
 
@@ -89,25 +89,31 @@ public class ScorePublisherService implements IScorePublisher {
         return (int) (Math.random() * 101);
     }
 
-    public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) throws PublishingFileScoreException {
+    public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) throws PublishingFileScoreException , NegativeScoreException {
         synchronized (this) {
             logger.info("Publishing score by thread " + Thread.currentThread() + "id " + Thread.currentThread().getId() + " name "+ Thread.currentThread().getName());
             try (FileWriter writer = new FileWriter(currentFileName, true)) {
-                writer.write(playerId + "," + playerName + "," + playerScore + "," + LocalDateTime.now() + "\n");
-                currentFileSize++;
+                if(playerScore>0)
+                {
+                    writer.write(playerId + "," + playerName + "," + playerScore + "," + LocalDateTime.now() + "\n");
+                    currentFileSize++;
+                }
+                else
+                    throw new NegativeScoreException("Player Score Can not be negative ");
+
 
                 if (currentFileSize >= Constant.DEFAULT_FILE_SIZE) {
                     writer.close();
                     createNewFile();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new PublishingFileScoreException("Error is thrown while publishing score to File",e);
             }
         }
     }
 
 
-    private void createNewFile() {
+    public void createNewFile() {
         // Generate a new file name, you can use a random UUID or any other naming scheme
         DateFormatterHelper dateFormatterHelper = new DateFormatterHelper();
         String currentDate = dateFormatterHelper.formatDate();
@@ -118,7 +124,7 @@ public class ScorePublisherService implements IScorePublisher {
         currentFileSize = 0;
     }
 
-    private class ScorePublishTask implements Runnable {
+    public class ScorePublishTask implements Runnable {
         @Override
         public void run() {
             while (true) {
@@ -130,10 +136,9 @@ public class ScorePublisherService implements IScorePublisher {
                     addEntryToFile(playerId, playerName, score);
                     // Sleep for 5 seconds
                     Thread.sleep(5000);
-                } catch (PublishingFileScoreException e) {
+                } catch (PublishingFileScoreException  | NegativeScoreException e) {
                     logger.severe(e.getMessage());
-                }
-                catch (Exception e)
+                } catch (Exception e)
                 {
                     logger.severe("Error in generating player name or scores: " + e.getMessage());
                 }
