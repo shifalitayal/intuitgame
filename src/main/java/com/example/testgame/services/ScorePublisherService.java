@@ -89,6 +89,20 @@ public class ScorePublisherService implements IScorePublisher {
         return (int) (Math.random() * 101);
     }
 
+    /**
+     * Adds a new entry to the file with the specified player ID, player name, and player score.
+     * The entry format is "playerId,playerName,playerScore,timestamp\n".
+     * If the player score is positive, the entry is appended to the current file.
+     * If the player score is negative, a NegativeScoreException is thrown.
+     * After adding the entry, the method checks if the current file size exceeds the default file size.
+     * If so, it closes the current file and creates a new file.
+     *
+     * @param playerId The ID of the player.
+     * @param playerName The name of the player.
+     * @param playerScore The score of the player.
+     * @throws PublishingFileScoreException If an error occurs while publishing the score to the file.
+     * @throws NegativeScoreException If the player score is negative.
+     */
     public void addEntryToFile(Integer playerId, String playerName, Integer playerScore) throws PublishingFileScoreException , NegativeScoreException {
         synchronized (this) {
             logger.info("Publishing score by thread " + Thread.currentThread() + "id " + Thread.currentThread().getId() + " name "+ Thread.currentThread().getName());
@@ -112,6 +126,13 @@ public class ScorePublisherService implements IScorePublisher {
         }
     }
 
+    /**
+     * Creates a new file in the specified directory using a naming scheme based on the current date and a file counter.
+     * The file name format is "file_[current_date]_[file_counter].txt".
+     * The current date is obtained using the DateFormatterHelper.
+     * The file counter is incremented after each file creation.
+     * After creating the file, the current file name is updated, and the current file size is reset to zero.
+     */
 
     public void createNewFile() {
         // Generate a new file name, you can use a random UUID or any other naming scheme
@@ -124,6 +145,15 @@ public class ScorePublisherService implements IScorePublisher {
         currentFileSize = 0;
     }
 
+    /**
+     * A task responsible for publishing scores to a file at regular intervals.
+     * This task generates random player names, scores, and player IDs, and adds them to the file.
+     * It sleeps for 5 seconds between each publishing attempt.
+     *
+     * If an exception occurs during the publishing process, it logs the exception message using a logger.
+     * If the exception is a PublishingFileScoreException or NegativeScoreException, it logs the error message as severe.
+     * For any other exceptions, it logs a generic error message along with the exception message as severe.
+     */
     public class ScorePublishTask implements Runnable {
         @Override
         public void run() {

@@ -2,7 +2,7 @@ package com.example.testgame.constants;
 
 public class Constant {
 
-    public static final String FILE_NAME = "src\\main\\resources\\files\\file_2024-05-11_1.txt";
+    public static final String FILE_NAME = "src\\main\\resources\\files\\file_2024-05-14_1.txt";
 
     public static final String DIRECTORY_PATH = "src\\main\\resources\\files\\";
 

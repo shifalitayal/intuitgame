@@ -12,11 +12,13 @@ import com.example.testgame.models.PlayerScore;
 import com.example.testgame.repositories.PlayerScoreRepository;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -38,8 +40,6 @@ public class ScoreConsumerService implements IScoreConsumer {
     PriorityBlockingQueue<PlayerScore> cache ;
 
     ExecutorService executorService ;
-
-
 
     Map<String, Integer> lastProcessedLineMap ;
 
@@ -165,10 +165,6 @@ public class ScoreConsumerService implements IScoreConsumer {
         }
     }
 
-
-
-
-
     /**
      * Updates the database with a new player score and updates the cache of top scores if necessary.
      *
@@ -195,8 +191,6 @@ public class ScoreConsumerService implements IScoreConsumer {
         }
 
     }
-
-
 
     /**
      * Counts the total number of lines in the file specified by the given file path.
