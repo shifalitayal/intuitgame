@@ -263,7 +263,7 @@ class ScoreConsumerServiceTest {
         scoreConsumerService.processNewScoresFromFile(new File(Constant.FILE_NAME), startLine, endLine);
 
         // Verify that lastProcessedLineMap was updated
-        verify(scoreConsumerService.lastProcessedLineMap).put(eq("file_2024-05-11_1.txt"), eq(endLine));
+        verify(scoreConsumerService.lastProcessedLineMap).put(eq("file_2024-05-16_1.txt"), eq(endLine));
     }
 
     @Test
@@ -285,7 +285,7 @@ class ScoreConsumerServiceTest {
         scoreConsumerService.processNewScoresFromFile(new File(Constant.FILE_NAME), startLine, endLine);
 
         // Verify that lastProcessedLineMap was updated
-        verify(scoreConsumerService.lastProcessedLineMap).put(eq("file_2024-05-11_1.txt"), eq(endLine));
+        verify(scoreConsumerService.lastProcessedLineMap).put(eq("file_2024-05-16_1.txt"), eq(endLine));
     }
     @Test
     void testProcessNewScoresFromFileWithNullPointerException() throws IOException {

@@ -115,13 +115,13 @@ class ScorePublisherServiceTest {
     void testCreateNewFile() {
         // Mock DateFormatterHelper to return a fixed date
         DateFormatterHelper dateFormatterHelper = mock(DateFormatterHelper.class);
-        when(dateFormatterHelper.formatDate()).thenReturn("2024-05-14"); // Or any desired date format
+        when(dateFormatterHelper.formatDate()).thenReturn("2024-05-16"); // Or any desired date format
 
         // Call the method
         scorePublisherService.createNewFile();
 
         // Verify that the currentFileName is correct
-        String expectedFileName = "src\\main\\resources\\files\\file_2024-05-14_2.txt"; // Adjust the expected file name as per your Constant.DIRECTORY_PATH and fileCounter
+        String expectedFileName = "src\\main\\resources\\files\\file_2024-05-16_2.txt"; // Adjust the expected file name as per your Constant.DIRECTORY_PATH and fileCounter
         assertEquals(expectedFileName, scorePublisherService.currentFileName);
 
         // Verify that fileCounter is incremented
